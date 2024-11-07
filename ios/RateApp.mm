@@ -9,22 +9,28 @@ RCT_EXPORT_MODULE()
 RCT_EXPORT_METHOD(requestReview:(RCTPromiseResolveBlock)resolve
                   reject:(RCTPromiseRejectBlock)reject)
 {
-    UIWindowScene *scene = [self findActiveScene];
-    if (scene) {
-        [SKStoreReviewController requestReviewInScene:scene];
-        resolve(@(YES));
-    } else {
-        reject(kNoActiveSceneError, @"No active scene found", nil);
-    }
+    dispatch_async(dispatch_get_main_queue(), ^{
+        UIWindowScene *scene;
+        for (UIWindowScene *windowScene in UIApplication.sharedApplication.connectedScenes) {
+            if (windowScene.activationState == UISceneActivationStateForegroundActive) {
+                scene = windowScene;
+                break;
+            }
+        }
+        if (scene) {
+            [SKStoreReviewController requestReviewInScene:scene];
+            resolve(@(YES));
+        } else {
+            reject(kNoActiveSceneError, @"No active scene found", nil);
+        }
+    });
 }
 
-- (UIWindowScene *) findActiveScene {
-    for (UIWindowScene *scene in UIApplication.sharedApplication.connectedScenes) {
-        if (scene.activationState == UISceneActivationStateForegroundActive) {
-            return scene;
-        }
-    }
-    return nil;
+- (void)requestReviewAppGallery:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
+}
+
+
+- (void)requestReviewGalaxyStore:(NSString *)androidPackageName resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
 }
 
 // Don't compile this code when we build for the old architecture.
